@@ -5,7 +5,7 @@
 
 <h1 style="text-align:center;">MAILING SERVICE</h1>
 <div class="img">
-    <p style="text-align:center;"><img src="https://i.imgur.com/XuKbdxM.png" style="width: 250px; height: 120px;" /></p>
+    <p style="text-align:center;"><img src="https://i.imgur.com/aAEj4M3.png" style="width: 230px; height: 180px;" /></p>
 </div>
 
 <form method="post" action="/Home/GetInvoiceMail">
@@ -14,3 +14,14 @@
         <input type="submit" value="Get Mock Invoice" class="invoiceSubmissionButton">
     </div>
 </form>
+
+
+
+@if(ViewBag.SuccessMessage is not null)
+{
+    <div class="successMessageContainer" id="successMessage">
+        <div class="successMessage" style="text-align:center;">
+            <p class="message">@ViewBag.SuccessMessage</p>
+        </div>
+    </div>
+}
