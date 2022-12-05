@@ -47,24 +47,25 @@ namespace CoravelMailingServiceTest.Services
                         var db = scope.ServiceProvider.GetService<ApplicationDbContext>();
                         var mailSvc = scope.ServiceProvider.GetService<MailServices>();
 
-                        if (db!.PendingMails is null)
+                        if (db!.PendingMails.Count() == 0)
                         {
                             Console.WriteLine("There are no messages pending");
 
                             return;
                         }
 
-                        foreach (var mail in db.PendingMails)
+                        var mailCount = db.PendingMails.Count();
+
+                        for (int i = 0; i < mailCount; i++)
                         {
                             var pendingMail = await db.PendingMails.Include(x => x.MailProducts).Select(x => x).FirstOrDefaultAsync();
-
                             var invoice = mailSvc!.MapPendingMailToInvoice(pendingMail!);
 
                             try
                             {
                                 await _mailer.SendAsync(new UserViewMailable(invoice));
 
-                                db.Remove(pendingMail!);
+                                db.PendingMails.Remove(pendingMail!);
                                 db.SaveChanges();
                             }
                             catch (Exception ex)
@@ -75,7 +76,6 @@ namespace CoravelMailingServiceTest.Services
                         }
                     }
                 });
-
             }
         }
 

@@ -57,6 +57,8 @@ namespace CoravelMailingServiceTest.Controllers
                 try
                 {
                     await _mailer.SendAsync(new UserViewMailable(model));
+
+                    ViewBag.SuccessMessage = "Success! The email has been sent. Check your mailbox.";
                 }
                 catch
                 {
@@ -78,8 +80,6 @@ namespace CoravelMailingServiceTest.Controllers
                 }
 
             });
-
-            ViewBag.SuccessMessage = "Success! The email has been sent. Check your mailbox.";
 
             var metrics = _queue.GetMetrics();
             Console.WriteLine($"{metrics.RunningCount()} - {metrics.WaitingCount()}");
