@@ -53,12 +53,12 @@ namespace CoravelMailingServiceTest.Controllers
                 {
                     try
                     {
-                        await _mailer.SendAsync(new NewUserViewMailable(model));
+                        await _mailer.SendAsync(new UserViewMailable(model));
                     }
                     catch
                     {
 
-                        // DbContext is a scoped service and is disposed/garbage collected when queued(?)
+                        // DbContext is a scoped service and is disposed/garbage collected because QueueAsyncTask is executed elsewhere
                         // To resolve this we inject a new IServiceScopeFactory to create a new scope to resolve dependencies 
                         using (var scope = _serviceScopeFactory.CreateScope())
                         {

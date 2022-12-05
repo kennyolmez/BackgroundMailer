@@ -5,11 +5,6 @@ namespace CoravelMailingServiceTest.Services
 {
     public class MailServices
     {
-        public void QueueAndSendMail()
-        {
-
-        }
-
         public PendingMail MapInvoiceToPendingMail(InvoiceViewModel invoice, string email)
         {
             List<MailProduct> mailProducts = new List<MailProduct>();

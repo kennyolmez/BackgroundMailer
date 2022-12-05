@@ -13,7 +13,7 @@ namespace CoravelMailingServiceTest.Services
     public class PendingEmailService : IHostedService, IDisposable
     {
         private readonly IMailer _mailer;
-        private readonly IQueue _queue;
+        private readonly IQueue _queue; // Implement later
         public readonly CancellationTokenSource _cts = new();
         private readonly PeriodicTimer _timer = new(TimeSpan.FromMilliseconds(30000));
         private Task? RequeueMailTask;
@@ -30,6 +30,7 @@ namespace CoravelMailingServiceTest.Services
             RequeueMailTask = ResendPendingMails();
         }
 
+        // Resends mails every 30th second. Will change to send all persisted mails in bulk instead of one at a time
         private async Task ResendPendingMails()
         {
             while (await _timer.WaitForNextTickAsync(_cts.Token))
@@ -39,37 +40,48 @@ namespace CoravelMailingServiceTest.Services
 
                 // Need to create a new scope because AddDbContext registers ApplicationDbContext as scoped by defualt
                 // Which cannot be resolved in a IHostedService which is a singleton
-                using (var scope = _scopeFactory.CreateScope())
+                _queue.QueueAsyncTask(async () =>
                 {
-                    var db = scope.ServiceProvider.GetService<ApplicationDbContext>();
-                    var mailSvc = scope.ServiceProvider.GetService<MailServices>();
-
-                    // Should deal with this potentailly being null
-                    var pendingMail = await db.PendingMails.Include(x => x.MailProducts).Select(x => x).FirstOrDefaultAsync();
-
-                    if(pendingMail != null)
+                    using (var scope = _scopeFactory.CreateScope())
                     {
-                        var invoice = mailSvc!.MapPendingMailToInvoice(pendingMail);
+                        var db = scope.ServiceProvider.GetService<ApplicationDbContext>();
+                        var mailSvc = scope.ServiceProvider.GetService<MailServices>();
 
-                        try
+                        if (db!.PendingMails is null)
                         {
-                            await _mailer.SendAsync(new NewUserViewMailable(invoice));
+                            Console.WriteLine("There are no messages pending");
 
-                            db.Remove(pendingMail);
-                            db.SaveChanges();
+                            return;
                         }
-                        catch (Exception ex)
+
+                        foreach (var mail in db.PendingMails)
                         {
-                            Console.WriteLine(ex.Message);
+                            var pendingMail = await db.PendingMails.Include(x => x.MailProducts).Select(x => x).FirstOrDefaultAsync();
+
+                            var invoice = mailSvc!.MapPendingMailToInvoice(pendingMail!);
+
+                            try
+                            {
+                                await _mailer.SendAsync(new UserViewMailable(invoice));
+
+                                db.Remove(pendingMail!);
+                                db.SaveChanges();
+                            }
+                            catch (Exception ex)
+                            {
+                                // Temporary
+                                Console.WriteLine(ex.Message);
+                            }
                         }
                     }
-                }
-            } 
+                });
+
+            }
         }
 
         public async Task StopAsync(CancellationToken stoppingToken)
         {
-            if(RequeueMailTask is null)
+            if (RequeueMailTask is null)
             {
                 return;
             }

@@ -3,11 +3,11 @@ using CoravelMailingServiceTest.Models;
 
 namespace CoravelMailingServiceTest.Mailables
 {
-    public class NewUserViewMailable : Mailable<InvoiceViewModel>
+    public class UserViewMailable : Mailable<InvoiceViewModel>
     {
         private InvoiceViewModel model;
 
-        public NewUserViewMailable(InvoiceViewModel _model) => model = _model;
+        public UserViewMailable(InvoiceViewModel _model) => model = _model;
 
         public override void Build()
         {
