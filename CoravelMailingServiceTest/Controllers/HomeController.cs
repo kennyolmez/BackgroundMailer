@@ -40,46 +40,49 @@ namespace CoravelMailingServiceTest.Controllers
         public IActionResult GetInvoiceMail(string email)
         {
 
-            if (email is not null)
+            if (email is null)
             {
-                InvoiceViewModel model = new InvoiceViewModel
-                {
-                    Recipient = email,
-                    Products = _mockDatasvc.GenerateMockProducts()
-                };
-
-                // Queues in memory
-                _queue.QueueAsyncTask(async () =>
-                {
-                    try
-                    {
-                        await _mailer.SendAsync(new UserViewMailable(model));
-                    }
-                    catch
-                    {
-
-                        // DbContext is a scoped service and is disposed/garbage collected because QueueAsyncTask is executed elsewhere
-                        // To resolve this we inject a new IServiceScopeFactory to create a new scope to resolve dependencies 
-                        using (var scope = _serviceScopeFactory.CreateScope())
-                        {
-                            var db = scope.ServiceProvider.GetService<ApplicationDbContext>();
-
-                            var pendingMail = _mailSvc.MapInvoiceToPendingMail(model, email);
-
-                            db!.PendingMails.Add(pendingMail);
-
-                            db.SaveChanges();
-                        }
-                        Console.WriteLine("Message failed. Mail is added to database to pending status.");
-                    }
-
-                });
-
-                var metrics = _queue.GetMetrics();
-                Console.WriteLine($"{metrics.RunningCount()} - {metrics.WaitingCount()}");
-
                 return View("Index");
             }
+
+            InvoiceViewModel model = new InvoiceViewModel
+            {
+                Recipient = email,
+                Products = _mockDatasvc.GenerateMockProducts()
+            };
+
+            // Queues in memory
+            _queue.QueueAsyncTask(async () =>
+            {
+                try
+                {
+                    await _mailer.SendAsync(new UserViewMailable(model));
+                }
+                catch
+                {
+
+                    // DbContext is a scoped service and is disposed/garbage collected because QueueAsyncTask is executed elsewhere
+                    // To resolve this we inject a new IServiceScopeFactory to create a new scope to resolve dependencies 
+                    using (var scope = _serviceScopeFactory.CreateScope())
+                    {
+                        var db = scope.ServiceProvider.GetService<ApplicationDbContext>();
+
+                        var pendingMail = _mailSvc.MapInvoiceToPendingMail(model, email);
+
+                        db!.PendingMails.Add(pendingMail);
+
+                        db.SaveChanges();
+                    }
+
+                    Console.WriteLine("Message failed. Mail is added to database to pending status.");
+                }
+
+            });
+
+            ViewBag.SuccessMessage = "Success! The email has been sent. Check your mailbox.";
+
+            var metrics = _queue.GetMetrics();
+            Console.WriteLine($"{metrics.RunningCount()} - {metrics.WaitingCount()}");
 
             return View("Index");
 
