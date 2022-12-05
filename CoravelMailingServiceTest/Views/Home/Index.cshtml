@@ -1,0 +1,16 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+
+
+<h1 style="text-align:center;">MAILING SERVICE</h1>
+<div class="img">
+    <p style="text-align:center;"><img src="https://i.imgur.com/XuKbdxM.png" style="width: 250px; height: 120px;" /></p>
+</div>
+
+<form method="post" action="/Home/GetInvoiceMail">
+    <div class="invoiceSubmissionContainer">
+        <input type="text" name="email" placeholder="Email" class="emailInputBox">
+        <input type="submit" value="Get Mock Invoice" class="invoiceSubmissionButton">
+    </div>
+</form>

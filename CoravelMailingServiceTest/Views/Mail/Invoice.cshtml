@@ -1,0 +1,33 @@
+@using CoravelMailingServiceTest.Services
+
+
+@model InvoiceViewModel
+
+@if(Model.Products != null)
+{
+    @foreach (var item in Model.Products)
+    {
+        <div>
+            <section>
+                <p style="text-align:center;"><img src="@item.ImgUrl" height="113" width="113" border="0" /></p>
+                <p style="text-align:center;">
+                    <b>@item.Name</b> <br>
+                    <small>@item.BrandName</small>
+                </p>
+            </section>
+            <p style="text-align:center;">x @item.Quantity x @item.UnitPrice</p>
+            <p style="text-align:center;">Total Price: @Model.TotalOrderPrice()</p>
+        </div>
+        <hr style="width: 50%;" />
+    }
+}
+
+
+
+<p>
+    Here's a button link to cancel your order!
+    @await Component.InvokeAsync("EmailLinkButton", new  { text = "Cancel Order", url = "https://localhost:7003/" })
+</p>
+
+
+
